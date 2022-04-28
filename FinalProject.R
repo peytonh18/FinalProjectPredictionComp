@@ -33,3 +33,13 @@ CREDIT %>%
   autoplot()
 
 
+fit<-TRAIN %>% 
+  stretch_tsibble(.init=48, .step=24) %>% 
+  model(
+    ets=ETS(ï..credit_in_millions),
+    
+    arima=ARIMA(ï..credit_in_millions),
+    
+    lm=TSLM(ï..credit_in_millions))
+fit %>% forecast(h=6) %>% accuracy(TRAIN) %>% arrange(RMSE)
+
