@@ -73,12 +73,29 @@ fit<-TRAIN %>%
     
     CROSTON = CROSTON(ï..credit_in_millions),
     
-    lm2 = TSLM(ï..credit_in_millions ~ trend()))
+    lm2 = TSLM(ï..credit_in_millions ~ trend()),
+    
+    lm3 = TSLM(ï..credit_in_millions ~ trend() + season()))
+
+
+############################################################################################################
+#I'm not sure if this code is giving us the correct RMSE's for the holdout data. 
+#I am not sure because accuracy is using TRAIN instead of HOLDOUT. When I replace it with HOLDOUT, it does not run.
+#If this line of code is correct, then the best model to choose would be the ARIMA (RMSE = .127)
+############################################################################################################
 fit %>% forecast(h=6) %>% accuracy(TRAIN) %>% arrange(RMSE)
 
 
-fit_credit <- CREDIT %>%
-  model(TSLM(credit_in_millions ~ trend() + season()))
+
+
+
+
+############################################################################################################
+#The ARIMA model we just selected that had the lowest RMSE is only a straight line as seen in the autoplot below. Something isn't quite right here.
+#I think the there is a problem in line 87 when comparing the models' RMSE
+############################################################################################################
+fit_credit <- TRAIN %>%
+  model(arima=ARIMA(ï..credit_in_millions))
 fc_credit <- forecast(fit_credit)
 fc_credit %>%
   autoplot(CREDIT) +
@@ -88,10 +105,17 @@ fc_credit %>%
   )
 
 
-fit <- CREDIT %>%
-  model(ETS(credit_in_millions~ error("A") + trend("N") + season("N")))
-fc <- fit %>%
-  forecast(h = 12)
-fc %>% autoplot()
 
 
+
+
+############################################################################################################
+#Once we have the correct model selected, we just need to run this code to give us the forecast predictions 
+#for the next 12 months to turn in.
+fit_credit <- TRAIN %>%
+  model(arima=ARIMA(ï..credit_in_millions))
+CreditForcast <- forecast(fit_credit,h=12)
+CreditForcast <- fc_credit$ï..credit_in_millions
+
+write.csv(CreditForcast,file='CreditForcast',row.names=FALSE)
+############################################################################################################
