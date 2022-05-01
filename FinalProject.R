@@ -5,6 +5,7 @@ library(forecast)
 library(tidyr)
 library(lubridate)
 library(zoo)
+library(lubridate)
 
 #Load data frame
 CREDIT <-read.csv("credit.csv")
@@ -74,4 +75,23 @@ fit<-TRAIN %>%
     
     lm2 = TSLM(ï..credit_in_millions ~ trend()))
 fit %>% forecast(h=6) %>% accuracy(TRAIN) %>% arrange(RMSE)
+
+
+fit_credit <- CREDIT %>%
+  model(TSLM(credit_in_millions ~ trend() + season()))
+fc_credit <- forecast(fit_credit)
+fc_credit %>%
+  autoplot(CREDIT) +
+  labs(
+    title = "Star Wars Forecast",
+    y = "credit in millions"
+  )
+
+
+fit <- CREDIT %>%
+  model(ETS(credit_in_millions~ error("A") + trend("N") + season("N")))
+fc <- fit %>%
+  forecast(h = 12)
+fc %>% autoplot()
+
 
