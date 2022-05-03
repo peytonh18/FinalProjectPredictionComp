@@ -22,83 +22,207 @@ CREDIT <- data.frame(Date, CREDIT)
 CREDIT <- as_tsibble(CREDIT,
            index=Date)
 
-#Create training & holdout rows
-TRAIN <- CREDIT %>%
-  filter_index("1981 May" ~ "2020 Mar")
-HOLDOUT <- CREDIT %>%
-  filter_index("2020 Apr" ~ "2022 Apr")
-
 
 
 CREDIT %>% 
   autoplot()
 
 
-fit<-TRAIN %>% 
-  stretch_tsibble(.init=48, .step=24) %>% 
-  model(
-    ets=ETS(ï..credit_in_millions),
-    
-    arima=ARIMA(ï..credit_in_millions),
-    
-    lm=TSLM(ï..credit_in_millions),
-    
-    rw = RW(ï..credit_in_millions ~drift()),
-    
-    Naive = NAIVE(ï..credit_in_millions),
-    
-    SN = SNAIVE(ï..credit_in_millions),
-    
-    ETS2 = ETS(ï..credit_in_millions~ error("A") + trend("N") + season("N")),
-    
-    ETS3 = ETS(ï..credit_in_millions~ error("A") + trend("A") + season("N")),
-    
-    ETS4 = ETS(ï..credit_in_millions~ error("A") + trend("A") + season("A")),
-    
-    ETS5 = ETS(ï..credit_in_millions ~ error("A") + trend("Ad", phi = 0.9) + season("N")),
-    
-    ETS6 = ETS(ï..credit_in_millions~ error("M") + trend("A") + season("M")),
-    
-    ETS7 = ETS(ï..credit_in_millions~ error("M") + trend("Ad") + season("M")),
-    
-    arima210 = ARIMA(ï..credit_in_millions ~ pdq(2,1,0)),
-    
-    arima013 = ARIMA(ï..credit_in_millions ~ pdq(0,1,3)),
-    
-    arima012011 = ARIMA(ï..credit_in_millions ~ pdq(0,1,2) + PDQ(0,1,1)),
-    
-    arima210011 = ARIMA(ï..credit_in_millions ~ pdq(2,1,0) + PDQ(0,1,1)),
-    
-    stochastic = ARIMA(ï..credit_in_millions ~ pdq(d = 1)),
-    
-    CROSTON = CROSTON(ï..credit_in_millions),
-    
-    lm2 = TSLM(ï..credit_in_millions ~ trend()),
-    
-    lm3 = TSLM(ï..credit_in_millions ~ trend() + season()))
+
+#ETS: 0.143
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ETS(credit_in_millions)) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+#ARIMA: 0.125
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ARIMA(credit_in_millions,stepwise=FALSE)) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+#TLSM: 0.228
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(TSLM(credit_in_millions)) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
 
 
-############################################################################################################
-#I'm not sure if this code is giving us the correct RMSE's for the holdout data. 
-#I am not sure because accuracy is using TRAIN instead of HOLDOUT. When I replace it with HOLDOUT, it does not run.
-#If this line of code is correct, then the best model to choose would be the ARIMA (RMSE = .127)
-############################################################################################################
-fit %>% forecast(h=6) %>% accuracy(TRAIN) %>% arrange(RMSE)
+#RW: 0.143
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(RW(credit_in_millions ~drift())) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
 
 
+#Naive: 0.141
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(NAIVE(credit_in_millions)) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
 
 
+#Seasonal Naive: 0.223
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(SNAIVE(credit_in_millions)) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
 
 
-############################################################################################################
-#The ARIMA model we just selected that had the lowest RMSE is only a straight line as seen in the autoplot below. Something isn't quite right here.
-#I think the there is a problem in line 87 when comparing the models' RMSE
-############################################################################################################
-fit_credit <- TRAIN %>%
-  model(arima=ARIMA(ï..credit_in_millions))
-fc_credit <- forecast(fit_credit)
+#ETS2: 0.125
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ETS(credit_in_millions~ error("A") + trend("N") + season("N"))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#ETS3: 0.128
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ETS(credit_in_millions~ error("A") + trend("A") + season("N"))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#ETS4: 0.149
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ETS(credit_in_millions~ error("A") + trend("A") + season("A"))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#ETS5: 0.125
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ETS(credit_in_millions ~ error("A") + trend("Ad", phi = 0.9) + season("N"))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#ETS6: 0.167
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ETS(credit_in_millions~ error("M") + trend("A") + season("M"))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#ETS7: 0.158
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ETS(credit_in_millions~ error("M") + trend("Ad") + season("M"))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#arima210: 0.125
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ARIMA(credit_in_millions ~ pdq(2,1,0))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#arima013: 0.124
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ARIMA(credit_in_millions ~ pdq(0,1,3))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+##############################################################################
+#arima013: 0.0923          BEST PERFORMING MODEL
+##############################################################################
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=1)
+CREDIT_Stretch %>% 
+  model(ARIMA(credit_in_millions ~ pdq(0,1,3))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#arima012011: 0.150
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ARIMA(credit_in_millions ~ pdq(0,1,2) + PDQ(0,1,1))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#arima210011: 0.147
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ARIMA(credit_in_millions ~ pdq(2,1,0) + PDQ(0,1,1))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#stochastic: 0.125
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(ARIMA(credit_in_millions ~ pdq(d = 1))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#CROSTON: 0.134
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(CROSTON(credit_in_millions)) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#lm2: 0.158
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(TSLM(credit_in_millions ~ trend())) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+#lm3: 0.172
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=24)
+CREDIT_Stretch %>% 
+  model(TSLM(credit_in_millions ~ trend() + season())) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+
+fit_credit <- CREDIT_Stretch %>%
+  model(ETS(credit_in_millions))
+fc_credit <- forecast(fit_credit,h=1)
 fc_credit %>%
-  autoplot(CREDIT) +
+  autoplot() +
   labs(
     title = "Star Wars Forecast",
     y = "credit in millions"
@@ -108,14 +232,26 @@ fc_credit %>%
 
 
 
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=1)
+CREDIT_Stretch %>% 
+  model(ARIMA(credit_in_millions ~ pdq(0,1,3))) %>% 
+  forecast(h=1) %>% 
+  accuracy(CREDIT)
+
+CreditForcast <- CREDIT_Stretch %>% 
+  model(ARIMA(credit_in_millions ~ pdq(0,1,3))) %>% 
+  forecast(h=12)
+
+tail(CreditForcast,12)
+
 
 ############################################################################################################
-#Once we have the correct model selected, we just need to run this code to give us the forecast predictions 
-#for the next 12 months to turn in.
-fit_credit <- TRAIN %>%
-  model(arima=ARIMA(ï..credit_in_millions))
+CREDIT_Stretch <- CREDIT %>% 
+  stretch_tsibble(.init = 48,.step=15)
 CreditForcast <- forecast(fit_credit,h=12)
 CreditForcast <- fc_credit$ï..credit_in_millions
 
 write.csv(CreditForcast,file='CreditForcast',row.names=FALSE)
 ############################################################################################################
+
